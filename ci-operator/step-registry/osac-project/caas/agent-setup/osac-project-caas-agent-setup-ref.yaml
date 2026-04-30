@@ -1,0 +1,20 @@
+ref:
+  as: osac-project-caas-agent-setup
+  from: dev-scripts
+  dependencies:
+  - name: osac-installer
+    env: OSAC_INSTALLER_IMAGE
+  grace_period: 10m
+  timeout: 3h0m0s
+  commands: osac-project-caas-agent-setup-commands.sh
+  resources:
+    requests:
+      cpu: 100m
+      memory: 200Mi
+  env:
+  - name: E2E_NAMESPACE
+    default: "osac-e2e-ci"
+    documentation: The namespace to use for the e2e tests
+  - name: OSAC_CLUSTER_TEMPLATE
+    default: "osac.templates.ocp_ci_small"
+    documentation: The cluster template to use for CaaS e2e tests

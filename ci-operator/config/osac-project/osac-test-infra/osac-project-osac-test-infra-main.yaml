@@ -1,26 +1,26 @@
 base_images:
   assisted-image-service:
-    name: backplane-5.0
+    name: ocm-2.16
     namespace: edge-infrastructure
     tag: assisted-image-service
   assisted-installer:
-    name: backplane-5.0
+    name: ocm-2.16
     namespace: edge-infrastructure
     tag: assisted-installer
   assisted-installer-agent:
-    name: backplane-5.0
+    name: ocm-2.16
     namespace: edge-infrastructure
     tag: assisted-installer-agent
   assisted-installer-controller:
-    name: backplane-5.0
+    name: ocm-2.16
     namespace: edge-infrastructure
     tag: assisted-installer-controller
   assisted-service:
-    name: backplane-5.0
+    name: ocm-2.16
     namespace: edge-infrastructure
     tag: assisted-service
   assisted-test-infra:
-    name: backplane-5.0
+    name: ocm-2.16
     namespace: edge-infrastructure
     tag: assisted-test-infra
   dev-scripts:
@@ -202,6 +202,75 @@ tests:
         OPENSHIFT_VERSION=4.20
       TEST: test_virtual_network_lifecycle.py
     workflow: osac-project-ofcir-baremetal
+- as: e2e-metal-caas-cluster-order-lifecycle
+  capabilities:
+  - intranet
+  cron: 0 4 * * 1
+  steps:
+    cluster_profile: packet-assisted
+    env:
+      ASSISTED_CONFIG: |
+        OLM_OPERATORS=mce
+        NUM_MASTERS=1
+        NUM_WORKERS=0
+        MASTER_MEMORY=57344
+        MASTER_DISK_COUNT=2
+        MASTER_DISK=200000000000
+        MASTER_CPU=24
+        OPENSHIFT_VERSION=4.20
+        MCE_SERVICE=true
+        STORAGE_SERVICE=true
+        INGRESS_SERVICE=true
+      E2E_KUSTOMIZE_OVERLAY: caas-ci
+      OSAC_CLUSTER_TEMPLATE: osac.templates.ocp_ci_small
+      TEST: test_cluster_order_lifecycle.py
+    workflow: osac-project-ofcir-caas
+- as: e2e-metal-caas-cluster-order-api-fields
+  capabilities:
+  - intranet
+  cron: 0 4 * * 3
+  steps:
+    cluster_profile: packet-assisted
+    env:
+      ASSISTED_CONFIG: |
+        OLM_OPERATORS=mce
+        NUM_MASTERS=1
+        NUM_WORKERS=0
+        MASTER_MEMORY=57344
+        MASTER_DISK_COUNT=2
+        MASTER_DISK=200000000000
+        MASTER_CPU=24
+        OPENSHIFT_VERSION=4.20
+        MCE_SERVICE=true
+        STORAGE_SERVICE=true
+        INGRESS_SERVICE=true
+      E2E_KUSTOMIZE_OVERLAY: caas-ci
+      OSAC_CLUSTER_TEMPLATE: osac.templates.ocp_ci_small
+      TEST: test_cluster_order_api_fields.py
+    workflow: osac-project-ofcir-caas
+- as: e2e-metal-caas-order-delete-during-provision
+  capabilities:
+  - intranet
+  cron: 0 4 * * 5
+  steps:
+    cluster_profile: packet-assisted
+    env:
+      ASSISTED_CONFIG: |
+        OLM_OPERATORS=mce
+        NUM_MASTERS=1
+        NUM_WORKERS=0
+        MASTER_MEMORY=57344
+        MASTER_DISK_COUNT=2
+        MASTER_DISK=200000000000
+        MASTER_CPU=24
+        OPENSHIFT_VERSION=4.20
+        MCE_SERVICE=true
+        STORAGE_SERVICE=true
+        INGRESS_SERVICE=true
+      E2E_KUSTOMIZE_OVERLAY: caas-ci
+      OSAC_CLUSTER_TEMPLATE: osac.templates.ocp_ci_small
+      TEST: test_order_delete_during_provision.py
+    workflow: osac-project-ofcir-caas
 zz_generated_metadata:
   branch: main
   org: osac-project
