@@ -14,8 +14,11 @@ AGENT_VM_NAME="agent-worker-01"
 AGENT_VM_STORAGE_DIR="/data/osac-storage"
 
 # Discover the libvirt network cluster-tool created for this clone
+echo "Available libvirt networks:"
+ssh -F "${SHARED_DIR}/ssh_config" ci_machine "virsh net-list --name" || true
 LIBVIRT_NETWORK=$(ssh -F "${SHARED_DIR}/ssh_config" ci_machine \
-    "virsh net-list --name | grep ${CLONE_NAME}" | head -1 | tr -d '[:space:]')
+    "virsh net-list --name | grep \"${CLONE_NAME}\"" | head -1 | tr -d '[:space:]')
+[[ -z "${LIBVIRT_NETWORK}" ]] && { echo "ERROR: No libvirt network matching '${CLONE_NAME}' found"; exit 1; }
 echo "Libvirt network: ${LIBVIRT_NETWORK}"
 
 # Run agent setup on the bare metal host (oc is already installed from boot step)
@@ -89,7 +92,7 @@ virt-install \
     --noautoconsole
 
 echo "Agent VM created, waiting for registration..."
-for i in $(seq 1 60); do
+for i in $(seq 1 120); do
     COUNT=$(oc get agent -n "${AGENT_NAMESPACE}" --no-headers 2>/dev/null | wc -l)
     [[ "${COUNT}" -gt 0 ]] && break
     sleep 5

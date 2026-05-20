@@ -82,6 +82,7 @@ oc get clusterorders -n "${E2E_NAMESPACE}" -o yaml > "${ARTIFACT_DIR}/caas/clust
 oc get hostedclusters -A -o wide > "${ARTIFACT_DIR}/caas/hostedclusters.txt" 2>&1 || true
 oc get hostedclusters -A -o yaml > "${ARTIFACT_DIR}/caas/hostedclusters.yaml" 2>&1 || true
 oc get nodepools -A -o wide > "${ARTIFACT_DIR}/caas/nodepools.txt" 2>&1 || true
+oc get nodepools -A -o yaml > "${ARTIFACT_DIR}/caas/nodepools.yaml" 2>&1 || true
 oc get agents -A -o wide > "${ARTIFACT_DIR}/caas/agents.txt" 2>&1 || true
 oc get infraenvs -A -o wide > "${ARTIFACT_DIR}/caas/infraenvs.txt" 2>&1 || true
 oc get agentserviceconfig -o yaml > "${ARTIFACT_DIR}/caas/agentserviceconfig.yaml" 2>&1 || true
