@@ -39,6 +39,23 @@ LIBVIRT_NETWORK="$5"
 
 export KUBECONFIG="/root/.kube/${CLONE_NAME}.kubeconfig"
 
+# Reconfigure MetalLB IPAddressPool for the clone's subnet
+NODE_IP=$(oc get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+SUBNET_PREFIX=$(echo "${NODE_IP}" | cut -d. -f1-3)
+echo "Node IP: ${NODE_IP}, subnet prefix: ${SUBNET_PREFIX}"
+cat <<METALLBEOF | oc apply -f -
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: caas-address-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - ${SUBNET_PREFIX}.240-${SUBNET_PREFIX}.250
+  autoAssign: false
+METALLBEOF
+echo "MetalLB IPAddressPool configured for ${SUBNET_PREFIX}.240-${SUBNET_PREFIX}.250"
+
 # Create agent namespace
 oc create namespace "${AGENT_NAMESPACE}" --dry-run=client -o yaml | oc apply -f -
 

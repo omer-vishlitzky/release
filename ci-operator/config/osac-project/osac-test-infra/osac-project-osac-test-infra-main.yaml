@@ -216,48 +216,6 @@ tests:
         OPENSHIFT_VERSION=4.20
       TEST: test_virtual_network_lifecycle.py
     workflow: osac-project-ofcir-baremetal
-- as: e2e-metal-caas-cluster-order-lifecycle
-  capabilities:
-  - intranet
-  cron: 0 2 * * 5
-  steps:
-    cluster_profile: packet-assisted
-    env:
-      ASSISTED_CONFIG: |
-        OLM_OPERATORS=cnv,lvm
-        NUM_MASTERS=1
-        NUM_WORKERS=0
-        MASTER_MEMORY=57344
-        MASTER_DISK_COUNT=2
-        MASTER_DISK=200000000000
-        MASTER_CPU=24
-        OPENSHIFT_VERSION=4.20
-      E2E_KUSTOMIZE_OVERLAY: caas-ci
-      E2E_CLUSTER_TEMPLATE: osac.templates.ocp_ci_small
-      E2E_TEST_DIR: tests/caas
-      TEST: test_cluster_order_lifecycle.py
-    workflow: osac-project-ofcir-baremetal
-- as: e2e-metal-caas-cluster-order-delete-during-provision
-  capabilities:
-  - intranet
-  cron: 0 6 * * 5
-  steps:
-    cluster_profile: packet-assisted
-    env:
-      ASSISTED_CONFIG: |
-        OLM_OPERATORS=cnv,lvm
-        NUM_MASTERS=1
-        NUM_WORKERS=0
-        MASTER_MEMORY=57344
-        MASTER_DISK_COUNT=2
-        MASTER_DISK=200000000000
-        MASTER_CPU=24
-        OPENSHIFT_VERSION=4.20
-      E2E_KUSTOMIZE_OVERLAY: caas-ci
-      E2E_CLUSTER_TEMPLATE: osac.templates.ocp_ci_small
-      E2E_TEST_DIR: tests/caas
-      TEST: test_cluster_order_delete_during_provision.py
-    workflow: osac-project-ofcir-baremetal
 zz_generated_metadata:
   branch: main
   org: osac-project
