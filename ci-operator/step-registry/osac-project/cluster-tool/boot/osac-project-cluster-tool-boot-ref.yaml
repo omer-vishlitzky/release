@@ -36,6 +36,12 @@ ref:
   - name: CLUSTER_TOOL_FLAVOR_IMAGE
     default: "quay.io/rh-ee-ovishlit/cluster-flavors:osac-vmaas-pruned"
     documentation: OCI image containing the OSAC snapshot flavor
+  - name: CLUSTER_TOOL_FLAVOR_NAME
+    default: "osac-vmaas-pruned"
+    documentation: Name of the cluster-tool flavor after pulling the OCI image
+  - name: E2E_CLUSTER_TEMPLATE
+    default: ""
+    documentation: Cluster template to publish and wait for (CaaS only). Empty means skip.
   documentation: |-
     Boots an OSAC cluster from a pre-built snapshot using cluster-tool,
     then refreshes domain-sensitive resources. Optionally overrides a

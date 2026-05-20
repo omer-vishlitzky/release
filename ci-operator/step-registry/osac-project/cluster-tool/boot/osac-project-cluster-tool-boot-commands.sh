@@ -11,8 +11,10 @@ echo "E2E_NAMESPACE: ${E2E_NAMESPACE}"
 echo "E2E_KUSTOMIZE_OVERLAY: ${E2E_KUSTOMIZE_OVERLAY}"
 echo "E2E_VM_TEMPLATE: ${E2E_VM_TEMPLATE}"
 echo "OSAC_INSTALLER_IMAGE: ${OSAC_INSTALLER_IMAGE}"
+echo "CLUSTER_TOOL_FLAVOR_NAME: ${CLUSTER_TOOL_FLAVOR_NAME}"
 echo "COMPONENT_IMAGE: ${COMPONENT_IMAGE:-<none>}"
 echo "COMPONENT_IMAGE_NAME: ${COMPONENT_IMAGE_NAME:-<none>}"
+echo "E2E_CLUSTER_TEMPLATE: ${E2E_CLUSTER_TEMPLATE:-<none>}"
 echo "-------------------------------------------"
 
 CLONE_NAME="ci-test"
@@ -94,6 +96,8 @@ VM_TEMPLATE="$6"
 COMPONENT_IMAGE="${7:-}"
 COMPONENT_IMAGE_NAME="${8:-}"
 NAMESPACE="${9:-osac-e2e-ci}"
+FLAVOR_NAME="${10:-osac-vmaas-pruned}"
+CLUSTER_TEMPLATE="${11:-}"
 
 # --- Phase 1: cluster-tool setup ---
 echo "=== Downloading cluster-tool ==="
@@ -137,7 +141,7 @@ echo "=== Pulling OSAC vmaas flavor ==="
 python3 /usr/local/bin/cluster-tool pull "${FLAVOR_IMAGE}"
 
 echo "=== Booting cluster ==="
-python3 /usr/local/bin/cluster-tool boot --flavor osac-vmaas-pruned --name "${CLONE}"
+python3 /usr/local/bin/cluster-tool boot --flavor "${FLAVOR_NAME}" --name "${CLONE}"
 
 systemctl restart dnsmasq
 
@@ -191,6 +195,7 @@ podman run --authfile /root/pull-secret --rm --network=host \
     -e KUBECONFIG=/root/.kube/config \
     -e INSTALLER_KUSTOMIZE_OVERLAY="${KUSTOMIZE_OVERLAY}" \
     -e INSTALLER_VM_TEMPLATE="${VM_TEMPLATE}" \
+    -e INSTALLER_CLUSTER_TEMPLATE="${CLUSTER_TEMPLATE}" \
     -e INSTALLER_NAMESPACE="${NAMESPACE}" \
     "${INSTALLER_IMAGE}" \
     bash -c "${COMPONENT_OVERRIDE_CMD}${AAP_OVERRIDE_CMD}cd /installer && sh scripts/refresh-after-snapshot.sh"
@@ -209,6 +214,8 @@ timeout -s 9 50m ssh -F "${SHARED_DIR}/ssh_config" ci_machine \
     '${E2E_VM_TEMPLATE}' \
     '${COMPONENT_IMAGE:-}' \
     '${COMPONENT_IMAGE_NAME:-}' \
-    '${E2E_NAMESPACE}'"
+    '${E2E_NAMESPACE}' \
+    '${CLUSTER_TOOL_FLAVOR_NAME}' \
+    '${E2E_CLUSTER_TEMPLATE:-}'"
 
 echo "Boot step finished successfully."

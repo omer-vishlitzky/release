@@ -75,6 +75,19 @@ echo "=== Collecting compute instance status ==="
 oc get computeinstances -n "${E2E_NAMESPACE}" -o wide > "${ARTIFACT_DIR}/computeinstances.txt" 2>&1 || true
 oc get computeinstances -n "${E2E_NAMESPACE}" -o yaml > "${ARTIFACT_DIR}/computeinstances.yaml" 2>&1 || true
 
+echo "=== Collecting CaaS/HyperShift diagnostics ==="
+mkdir -p "${ARTIFACT_DIR}/caas"
+oc get clusterorders -n "${E2E_NAMESPACE}" -o wide > "${ARTIFACT_DIR}/caas/clusterorders.txt" 2>&1 || true
+oc get clusterorders -n "${E2E_NAMESPACE}" -o yaml > "${ARTIFACT_DIR}/caas/clusterorders.yaml" 2>&1 || true
+oc get hostedclusters -A -o wide > "${ARTIFACT_DIR}/caas/hostedclusters.txt" 2>&1 || true
+oc get hostedclusters -A -o yaml > "${ARTIFACT_DIR}/caas/hostedclusters.yaml" 2>&1 || true
+oc get nodepools -A -o wide > "${ARTIFACT_DIR}/caas/nodepools.txt" 2>&1 || true
+oc get agents -A -o wide > "${ARTIFACT_DIR}/caas/agents.txt" 2>&1 || true
+oc get infraenvs -A -o wide > "${ARTIFACT_DIR}/caas/infraenvs.txt" 2>&1 || true
+oc get agentserviceconfig -o yaml > "${ARTIFACT_DIR}/caas/agentserviceconfig.yaml" 2>&1 || true
+oc get multiclusterengine -o yaml > "${ARTIFACT_DIR}/caas/multiclusterengine.yaml" 2>&1 || true
+oc get ipaddresspool -A -o yaml > "${ARTIFACT_DIR}/caas/metallb-pools.yaml" 2>&1 || true
+
 echo "=== Collecting node resource usage ==="
 oc adm top node > "${ARTIFACT_DIR}/node-resources.txt" 2>&1 || true
 oc adm top pod -n "${E2E_NAMESPACE}" --sort-by=memory > "${ARTIFACT_DIR}/pod-resources.txt" 2>&1 || true
