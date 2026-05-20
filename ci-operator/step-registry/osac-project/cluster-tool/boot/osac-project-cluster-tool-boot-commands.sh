@@ -11,11 +11,11 @@ echo "E2E_NAMESPACE: ${E2E_NAMESPACE}"
 echo "E2E_KUSTOMIZE_OVERLAY: ${E2E_KUSTOMIZE_OVERLAY}"
 echo "E2E_VM_TEMPLATE: ${E2E_VM_TEMPLATE}"
 echo "OSAC_INSTALLER_IMAGE: ${OSAC_INSTALLER_IMAGE}"
+echo "CLUSTER_TOOL_FLAVOR_NAME: ${CLUSTER_TOOL_FLAVOR_NAME}"
 echo "COMPONENT_IMAGE: ${COMPONENT_IMAGE:-<none>}"
 echo "COMPONENT_IMAGE_NAME: ${COMPONENT_IMAGE_NAME:-<none>}"
+echo "E2E_CLUSTER_TEMPLATE: ${E2E_CLUSTER_TEMPLATE:-<none>}"
 echo "-------------------------------------------"
-
-CLONE_NAME="vmaas-kustomize"
 
 # === Create ssh_config from ofcir-acquire output ===
 IP=$(cat "${SHARED_DIR}/server-ip")
@@ -94,6 +94,8 @@ VM_TEMPLATE="$6"
 COMPONENT_IMAGE="${7:-}"
 COMPONENT_IMAGE_NAME="${8:-}"
 NAMESPACE="${9:-osac-e2e-ci}"
+FLAVOR_NAME="${10:-vmaas-kustomize}"
+CLUSTER_TEMPLATE="${11:-}"
 
 _timer() {
     local elapsed=$(( $(date +%s) - $1 ))
@@ -149,8 +151,7 @@ _timer $PULL_START "Pull flavor"
 
 CLUSTER_BOOT_START=$(date +%s)
 echo "=== Booting cluster ==="
-python3 /usr/local/bin/cluster-tool boot --flavor vmaas-kustomize --name "${CLONE}"
-_timer $CLUSTER_BOOT_START "Boot cluster"
+python3 /usr/local/bin/cluster-tool boot --flavor "${FLAVOR_NAME}" --name "${CLONE}"
 
 systemctl restart dnsmasq
 
@@ -205,6 +206,7 @@ podman run --authfile /root/pull-secret --rm --network=host \
     -e KUBECONFIG=/root/.kube/config \
     -e INSTALLER_KUSTOMIZE_OVERLAY="${KUSTOMIZE_OVERLAY}" \
     -e INSTALLER_VM_TEMPLATE="${VM_TEMPLATE}" \
+    -e INSTALLER_CLUSTER_TEMPLATE="${CLUSTER_TEMPLATE}" \
     -e INSTALLER_NAMESPACE="${NAMESPACE}" \
     "${INSTALLER_IMAGE}" \
     bash -c "${COMPONENT_OVERRIDE_CMD}${AAP_OVERRIDE_CMD}cd /installer && sh scripts/refresh-after-snapshot.sh"
@@ -216,16 +218,18 @@ _timer $BOOT_TOTAL_START "Total (setup + pull + boot + refresh)"
 REMOTE_SCRIPT
 
 echo "Executing boot script on machine..."
-timeout -s 9 50m ssh -F "${SHARED_DIR}/ssh_config" ci_machine \
+timeout -s 9 90m ssh -F "${SHARED_DIR}/ssh_config" ci_machine \
     "bash /root/boot.sh \
     '${CLUSTER_TOOL_COMMIT}' \
     '${CLUSTER_TOOL_FLAVOR_IMAGE}' \
-    '${CLONE_NAME}' \
+    '${CLUSTER_TOOL_FLAVOR_NAME}' \
     '${OSAC_INSTALLER_IMAGE}' \
     '${E2E_KUSTOMIZE_OVERLAY}' \
     '${E2E_VM_TEMPLATE}' \
     '${COMPONENT_IMAGE:-}' \
     '${COMPONENT_IMAGE_NAME:-}' \
-    '${E2E_NAMESPACE}'"
+    '${E2E_NAMESPACE}' \
+    '${CLUSTER_TOOL_FLAVOR_NAME}' \
+    '${E2E_CLUSTER_TEMPLATE:-}'"
 
 echo "Boot step finished successfully."

@@ -67,6 +67,11 @@ tests:
   - intranet
   steps:
     workflow: osac-project-cluster-tool-vmaas
+- as: e2e-caas
+  capabilities:
+  - intranet
+  steps:
+    workflow: osac-project-cluster-tool-caas
 - as: e2e-metal-vmaas-compute-instance-creation
   capabilities:
   - intranet
