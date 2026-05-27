@@ -103,6 +103,40 @@ echo "=== Collecting AAP operator status ==="
 oc get ansibleautomationplatform -n "${E2E_NAMESPACE}" -o yaml > "${ARTIFACT_DIR}/aap-status.yaml" 2>&1 || true
 oc get automationcontroller -n "${E2E_NAMESPACE}" -o yaml > "${ARTIFACT_DIR}/automationcontroller-status.yaml" 2>&1 || true
 
+echo "=== Collecting AAP job stdout ==="
+mkdir -p "${ARTIFACT_DIR}/aap-jobs"
+AAP_ROUTE=$(oc get route osac-aap -n "${E2E_NAMESPACE}" -o jsonpath='{.spec.host}' 2>/dev/null)
+KC_ROUTE=$(oc get route keycloak -n keycloak -o jsonpath='{.spec.host}' 2>/dev/null)
+if [[ -n "${AAP_ROUTE}" && -n "${KC_ROUTE}" ]]; then
+    AAP_TOKEN=$(curl -sk "https://${KC_ROUTE}/realms/osac/protocol/openid-connect/token" \
+        -d "client_id=admin-cli" -d "username=admin" -d "password=admin" \
+        -d "grant_type=password" 2>/dev/null | jq -r '.access_token // empty')
+    if [[ -z "${AAP_TOKEN}" ]]; then
+        AAP_TOKEN=$(curl -sk "https://${KC_ROUTE}/realms/master/protocol/openid-connect/token" \
+            -d "client_id=admin-cli" -d "username=admin" -d "password=admin" \
+            -d "grant_type=password" 2>/dev/null | jq -r '.access_token // empty')
+    fi
+    if [[ -n "${AAP_TOKEN}" ]]; then
+        curl -sk -H "Authorization: Bearer ${AAP_TOKEN}" \
+            "https://${AAP_ROUTE}/api/controller/v2/jobs/?page_size=200&order_by=id" \
+            > "${ARTIFACT_DIR}/aap-jobs/jobs.json" 2>&1 || true
+        for job_id in $(jq -r '.results[]?.id // empty' "${ARTIFACT_DIR}/aap-jobs/jobs.json" 2>/dev/null); do
+            status=$(jq -r ".results[] | select(.id == ${job_id}) | .status // \"unknown\"" \
+                "${ARTIFACT_DIR}/aap-jobs/jobs.json" 2>/dev/null)
+            name=$(jq -r ".results[] | select(.id == ${job_id}) | .name // \"unknown\"" \
+                "${ARTIFACT_DIR}/aap-jobs/jobs.json" 2>/dev/null)
+            curl -sk -H "Authorization: Bearer ${AAP_TOKEN}" \
+                "https://${AAP_ROUTE}/api/controller/v2/jobs/${job_id}/stdout/?format=txt" \
+                > "${ARTIFACT_DIR}/aap-jobs/job-${job_id}-${status}-${name}.txt" 2>&1 || true
+        done
+        echo "  Captured stdout for $(ls "${ARTIFACT_DIR}/aap-jobs"/job-*.txt 2>/dev/null | wc -l) AAP jobs"
+    else
+        echo "  WARNING: Could not get AAP token, skipping job stdout capture"
+    fi
+else
+    echo "  AAP or Keycloak route not found, skipping job stdout capture"
+fi
+
 echo "Log collection complete"
 REMOTE_EOF
 
